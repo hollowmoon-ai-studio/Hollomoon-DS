@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: #F3F4F7;
+    --foreground: #0A0A0C;
+    --card: #FFFFFF;
+    --card-foreground: #0A0A0C;
+    --popover: #FFFFFF;
+    --popover-foreground: #0A0A0C;
+    --primary: #0A0A0C;
+    --primary-foreground: #FFFFFF;
+    --secondary: #E8EAEF;
+    --secondary-foreground: #1E1E24;
+    --muted: #EDEDF2;
+    --muted-foreground: #646874;
+    --accent: #4F7FFF;
+    --accent-foreground: #FFFFFF;
+    --border: #E0E2E8;
+    --input: #E0E2E8;
+    --ring: #4F7FFF;
+    --radius: 0.875rem;
+  }
+
+  .dark {
+    --background: #0A0A0C;
+    --foreground: #D9DBE1;
+    --card: #121217;
+    --card-foreground: #F4F5F8;
+    --popover: #121217;
+    --popover-foreground: #F4F5F8;
+    --primary: #D9DBE1;
+    --primary-foreground: #0A0A0C;
+    --secondary: #1B1B22;
+    --secondary-foreground: #D9DBE1;
+    --muted: #181820;
+    --muted-foreground: #8C909E;
+    --accent: #4F7FFF;
+    --accent-foreground: #FFFFFF;
+    --border: #23232C;
+    --input: #23232C;
+    --ring: #4F7FFF;
+  }
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-lunar-silver: #D9DBE1;
+  --color-deep-space: #0A0A0C;
+  --color-aurora-blue: #4F7FFF;
+  --color-graphite: #1E1E24;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Apple-style floating elevation and glassmorphism */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbars globally while preserving scroll functionality */
+* {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes floatSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes shimmerSlow {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s ease-in-out infinite;
+}
+
+.animate-float-subtle {
+  animation: floatSubtle 4s ease-in-out infinite;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(10, 10, 12, 0.08);
+}
+
+.dark .glass-panel {
+  background: rgba(18, 18, 23, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(217, 219, 225, 0.08);
+}
+
+.glass-nav {
+  background: rgba(243, 244, 247, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .glass-nav {
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.shadow-macOS-subtle {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.dark .shadow-macOS-subtle {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.shadow-macOS-lift {
+  box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.12), 0 0 1px 1px rgba(10, 10, 12, 0.05);
+}
+
+.dark .shadow-macOS-lift {
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(217, 219, 225, 0.12);
+}
+
+.shadow-aurora-glow {
+  box-shadow: 0 0 40px -10px rgba(79, 127, 255, 0.35);
+}
+
