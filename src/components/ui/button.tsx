@@ -1,17 +1,19 @@
 import * as React from 'react';
+import { motion, type HTMLMotionProps } from 'motion/react';
 import { cn } from '../../lib/utils';
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  extends Omit<HTMLMotionProps<'button'>, 'children'> {
   variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'accent' | 'link';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   asChild?: boolean;
+  children?: React.ReactNode;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'default', children, ...props }, ref) => {
     const baseStyles =
-      'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none active:scale-[0.98]';
+      'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none';
 
     const variants = {
       default:
@@ -36,13 +38,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     return (
-      <button
+      <motion.button
         ref={ref}
+        whileHover={{ scale: 1.018 }}
+        whileTap={{ scale: 0.975 }}
+        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         {...props}
       >
         {children}
-      </button>
+      </motion.button>
     );
   }
 );

@@ -261,6 +261,32 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onNavigate, lang }
                 <span>{lang === 'es' ? 'Reclamar Este Plan de Automatización' : 'Claim This Automation Roadmap'}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent('open-aura-concierge', {
+                      detail: {
+                        tab: 'cro',
+                        prompt:
+                          lang === 'es'
+                            ? `He calculado que nuestro equipo de ${teamSize} personas pierde ${hoursPerWeek} horas semanales a $${hourlyRate}/hora, proyectando $${annualSavings.toLocaleString()} anuales de ahorro. ¿Cómo implementaría Hollowmoon OS esto para nosotros?`
+                            : `I calculated that our team of ${teamSize} specialists spends ${hoursPerWeek} hrs/week on clerical tasks at $${hourlyRate}/hr, projecting $${annualSavings.toLocaleString()} in annual recovery. How would Hollowmoon OS structure our migration?`,
+                      },
+                    })
+                  );
+                }}
+                className="w-full py-2.5 px-4 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs font-mono flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#4F7FFF]" />
+                <span>
+                  {lang === 'es'
+                    ? 'Analizar Este Ahorro con AURA AI'
+                    : 'Analyze These Figures with AURA AI'}
+                </span>
+              </button>
+
               <p className="text-center text-[11px] text-[#D9DBE1]/50 font-mono">
                 No credit card required • Complimentary 30-min discovery audit
               </p>

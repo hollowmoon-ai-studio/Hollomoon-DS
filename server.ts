@@ -40,10 +40,10 @@ async function startServer() {
     });
   });
 
-  // AURA AI Concierge Server Endpoint
+  // AURA AI Concierge Server Endpoint with Persistent Memory Recall
   app.post('/api/concierge', async (req, res) => {
     try {
-      const { prompt, lang = 'en', profile = {} } = req.body;
+      const { prompt, lang = 'en', profile = {}, history = [], memoryContext = '' } = req.body;
 
       if (!prompt || typeof prompt !== 'string') {
         res.status(400).json({ error: 'Prompt is required' });
@@ -52,7 +52,7 @@ async function startServer() {
 
       const client = getGeminiClient();
 
-      // If GEMINI_API_KEY is available, use gemini-3.8-flash
+      // If GEMINI_API_KEY is available, use gemini-3.8-flash with multi-turn history & memory recall
       if (client) {
         const systemInstruction = `You are AURA, the Senior Business Development Director & Solutions Architect at Hollowmoon Digital Studio (headquartered in Panama City).
 Hollowmoon specializes in modernizing mid-to-enterprise service organizations (Logistics, Health, Finance, Legal, Commerce) by deploying custom high-velocity digital flagships (Hollowmoon OS), autonomous AI reasoning pipelines, and eliminating expensive per-seat SaaS tool sprawl.
@@ -62,11 +62,35 @@ Tasks:
 1. Respond in ${lang === 'es' ? 'Spanish (Español profesional y elegante)' : 'English (clear, authoritative, consultative)'}.
 2. Provide strategic guidance across Customer Support (CS), Customer Experience (CX), Conversion Rate Optimization (CRO), and Strategic Sales.
 3. Keep the response concise, executive, high-impact (2 to 4 punchy sentences or bullet points).
-4. Emphasize quantifiable business outcomes (capital saved, latency eliminated, conversion yield).`;
+4. Emphasize quantifiable business outcomes (capital saved, latency eliminated, conversion yield).
+${
+  memoryContext
+    ? `\nSESSION MEMORY RECALL (Active Continuity):\n${memoryContext}\n\nCRITICAL CX DIRECTIVE: Actively recall and reference previous conversation points (e.g. client's company, industry, previously discussed friction, specific audit numbers, or budget/timeline). Provide seamless conversational continuity so the client experiences an intelligent, attentive executive partner who remembers everything discussed.`
+    : ''
+}`;
+
+        // Format multi-turn conversation if history provided
+        let contentsPayload: any = prompt;
+        if (Array.isArray(history) && history.length > 0) {
+          const recentTurns = history
+            .filter((m: any) => m && m.text && (m.sender === 'user' || m.sender === 'aura'))
+            .slice(-8)
+            .map((msg: any) => ({
+              role: msg.sender === 'user' ? 'user' : 'model',
+              parts: [{ text: String(msg.text) }],
+            }));
+
+          recentTurns.push({
+            role: 'user',
+            parts: [{ text: prompt }],
+          });
+
+          contentsPayload = recentTurns;
+        }
 
         const response = await client.models.generateContent({
           model: 'gemini-3.8-flash',
-          contents: prompt,
+          contents: contentsPayload,
           config: {
             systemInstruction,
             temperature: 0.7,
@@ -101,12 +125,15 @@ Tasks:
         return;
       }
 
-      // Fallback response when GEMINI_API_KEY is not configured
+      // Fallback response when GEMINI_API_KEY is not configured, utilizing memory context
       const isEs = lang === 'es';
+      const industryName = profile.industry || (isEs ? 'empresas de servicios' : 'service enterprises');
+      const rememberedFriction = profile.currentBottleneck ? ` (${profile.currentBottleneck})` : '';
+
       res.json({
         reply: isEs
-          ? `Saludos ejecutivos. He analizado su consulta respecto a "${prompt}". En Hollowmoon Studio estructuramos buques insignia digitales de alto rendimiento con agentes de IA autónomos. Le recomiendo revisar el desglose de CRO y la arquitectura propuesta en el panel derecho para cuantificar el impacto en su operación.`
-          : `Executive greetings. I have evaluated your strategic inquiry regarding "${prompt}". At Hollowmoon Studio, we replace legacy software drag with custom high-speed flagships powered by autonomous AI. I encourage you to inspect the live CRO diagnostic and system architecture on the right cockpit to quantify your potential operational recovery.`,
+          ? `Saludos ejecutivos. Con base en nuestra memoria de sesión para su operación en ${industryName}${rememberedFriction}, he evaluado su consulta sobre "${prompt}". En Hollowmoon Studio estructuramos flagships de alto rendimiento eliminando suscripciones de SaaS y acelerando la conversión. Le sugiero verificar las métricas actualizadas en el panel derecho.`
+          : `Executive greetings. Drawing upon our session memory for your ${industryName} footprint${rememberedFriction}, I have evaluated your inquiry regarding "${prompt}". At Hollowmoon Studio, we replace legacy software drag with custom high-speed flagships powered by autonomous AI. I encourage you to inspect the live CRO diagnostic and system architecture on the right cockpit to quantify your potential operational recovery.`,
         category: 'sales',
         suggestedPills: isEs
           ? ['⚡ Diagnóstico Rápido de CRO', '🎯 Recomendar Arquitectura', '📅 Reservar Sesión de Estrategia']

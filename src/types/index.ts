@@ -46,6 +46,10 @@ export interface BlogPost {
     role: string;
   };
   tags: string[];
+  featuredImage: string;
+  imageAlt: string;
+  caption?: string;
+  keyMetric?: { label: string; value: string };
 }
 
 export interface HollowmoonOSNode {

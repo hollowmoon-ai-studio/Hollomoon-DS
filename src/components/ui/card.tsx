@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { motion, type HTMLMotionProps } from 'motion/react';
 import { cn } from '../../lib/utils';
 
 export const Card = React.forwardRef<
@@ -15,6 +16,23 @@ export const Card = React.forwardRef<
   />
 ));
 Card.displayName = 'Card';
+
+export const MotionCard = React.forwardRef<
+  HTMLDivElement,
+  HTMLMotionProps<'div'>
+>(({ className, ...props }, ref) => (
+  <motion.div
+    ref={ref}
+    className={cn(
+      'rounded-2xl border border-border/70 bg-card text-card-foreground shadow-macOS-subtle transition-colors duration-200',
+      className
+    )}
+    whileHover={{ y: -4, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+    whileTap={{ scale: 0.99 }}
+    {...props}
+  />
+));
+MotionCard.displayName = 'MotionCard';
 
 export const CardHeader = React.forwardRef<
   HTMLDivElement,

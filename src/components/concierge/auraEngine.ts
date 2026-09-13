@@ -1,5 +1,6 @@
 import { Language } from '../../types';
-import { AuraMessage, AuraLeadProfile, CroDiagnostic, RecommendedArchitecture } from './auraTypes';
+import { AuraMessage, AuraLeadProfile, CroDiagnostic, RecommendedArchitecture, AuraSessionMemory } from './auraTypes';
+import { formatMemoryContextForPrompt } from './auraMemoryStorage';
 
 export const initialAuraGreeting = (lang: Language): AuraMessage => ({
   id: 'msg-init-1',
@@ -153,7 +154,8 @@ export const defaultRecommendedArchitecture = (lang: Language, industry = 'Logis
 export async function queryAuraConcierge(
   userText: string,
   lang: Language,
-  currentProfile: AuraLeadProfile
+  currentProfile: AuraLeadProfile,
+  sessionMemory?: AuraSessionMemory
 ): Promise<{
   reply: string;
   category: 'cs' | 'cx' | 'cro' | 'sales';
@@ -162,6 +164,10 @@ export async function queryAuraConcierge(
   leadUpdate?: Partial<AuraLeadProfile>;
   suggestedPills?: string[];
 }> {
+  // Format memory context if available
+  const memoryContext = sessionMemory ? formatMemoryContextForPrompt(sessionMemory) : '';
+  const history = sessionMemory?.messages || [];
+
   // Try server endpoint first
   try {
     const res = await fetch('/api/concierge', {
@@ -171,6 +177,8 @@ export async function queryAuraConcierge(
         prompt: userText,
         lang,
         profile: currentProfile,
+        history,
+        memoryContext,
       }),
     });
 
@@ -185,8 +193,40 @@ export async function queryAuraConcierge(
     console.debug('Using client intelligence engine for AURA');
   }
 
-  // Client-side intelligent business development engine
+  // Client-side intelligent business development engine with Memory Recall
   const lower = userText.toLowerCase();
+
+  // Explicit session recall / recap request
+  if (
+    lower.includes('recap') ||
+    lower.includes('summary') ||
+    lower.includes('resumen') ||
+    lower.includes('remember') ||
+    lower.includes('memoria') ||
+    lower.includes('recall') ||
+    lower.includes('que hemos') ||
+    lower.includes('what did we discuss')
+  ) {
+    const points = sessionMemory?.recallPoints || [];
+    const pointsList = points.length > 0
+      ? points.map((p) => `• ${p.topic}: ${p.detail}`).join('\n')
+      : (lang === 'es' ? '• Diagnóstico inicial de operaciones y modelo de conversión.' : '• Baseline diagnostic of operations and conversion model.');
+
+    return {
+      category: 'cs',
+      reply:
+        lang === 'es'
+          ? `Accediendo a la memoria de sesión de AURA:\n\n${pointsList}\n\nCon base en estos parámetros retenidos para ${currentProfile.companyName || currentProfile.industry}, nuestra recomendación inmediata es formalizar la hoja de ruta en una sesión de 30 minutos.`
+          : `Accessing AURA persistent session memory:\n\n${pointsList}\n\nSynthesizing these retained parameters for ${currentProfile.companyName || currentProfile.industry}, our immediate recommendation is locking in an engineering roadmap session.`,
+      suggestedPills:
+        lang === 'es'
+          ? ['📅 Agendar Sesión de 30 min', '⚡ Diagnóstico CRO', '🎯 Ver Arquitectura']
+          : ['📅 Book 30-min Strategy Session', '⚡ Run CRO Diagnostic', '🎯 View Architecture'],
+      leadUpdate: {
+        qualificationScore: Math.min(97, currentProfile.qualificationScore + 6),
+      },
+    };
+  }
 
   // CRO Diagnostic intent
   if (lower.includes('cro') || lower.includes('conversion') || lower.includes('tasa') || lower.includes('diagnostico') || lower.includes('audit')) {

@@ -45,3 +45,48 @@ export interface RecommendedArchitecture {
   estimatedTimeline: string;
   keyDeliverable: string;
 }
+
+export interface AuraMemoryRecallPoint {
+  id: string;
+  category: 'need' | 'metric' | 'preference' | 'architecture' | 'decision';
+  topic: string;
+  detail: string;
+  timestamp: string;
+}
+
+export interface AuraSessionSummary {
+  sessionId: string;
+  sessionTitle: string;
+  createdAt: string;
+  lastActiveAt: string;
+  totalTurns: number;
+  recallCount: number;
+  industry: string;
+  companyName?: string;
+  qualificationScore: number;
+  bookedSlot?: string;
+}
+
+export interface IndexedDBStats {
+  supported: boolean;
+  activeSessionId: string;
+  totalSessions: number;
+  estimatedBytes: number;
+  storageEngine: 'indexeddb' | 'localstorage_fallback';
+}
+
+export interface AuraSessionMemory {
+  sessionId: string;
+  sessionTitle?: string;
+  createdAt: string;
+  lastActiveAt: string;
+  totalTurns: number;
+  messages: AuraMessage[];
+  leadProfile: AuraLeadProfile;
+  croAudit?: CroDiagnostic;
+  recommendedStack?: RecommendedArchitecture;
+  recallPoints: AuraMemoryRecallPoint[];
+  bookedSlot?: string;
+  language: Language;
+  storageEngine?: 'indexeddb' | 'localstorage_fallback';
+}

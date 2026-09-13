@@ -86,10 +86,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, lang }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate('service-detail', 'hollowmoon-os')}
-                  className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left"
+                  onClick={() => onNavigate('os')}
+                  className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left flex items-center gap-1.5"
                 >
-                  Hollowmoon OS
+                  <span>Hollowmoon OS</span>
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-[#4F7FFF]/20 text-[#4F7FFF]">CORE</span>
                 </button>
               </li>
               <li>

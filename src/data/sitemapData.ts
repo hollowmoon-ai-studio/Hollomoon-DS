@@ -1,4 +1,7 @@
 import { ServiceItem, CaseStudy, BlogPost, HollowmoonOSNode } from '../types';
+import postAiWorkflowsImg from '../assets/images/post_ai_workflows_1789261726597.jpg';
+import postAppleDesignImg from '../assets/images/post_apple_design_1789261735571.jpg';
+import postPanamaBridgeImg from '../assets/images/post_panama_bridge_1789261747259.jpg';
 
 export const servicesData: ServiceItem[] = [
   {
@@ -262,7 +265,11 @@ export const blogPostsData: BlogPost[] = [
     date: 'Sep 2026',
     category: 'AI & Automation',
     author: { name: 'Diego Arango', role: 'Head of Engineering' },
-    tags: ['Autonomous AI', 'Architecture', 'Enterprise Ops']
+    tags: ['Autonomous AI', 'Architecture', 'Enterprise Ops'],
+    featuredImage: postAiWorkflowsImg,
+    imageAlt: 'Autonomous AI multi-agent workflow architecture with neural execution pipelines replacing traditional dashboards',
+    caption: 'Visualizing multi-agent autonomous decision pipelines connected through zero-latency event buses.',
+    keyMetric: { label: 'Manual Ops Eliminated', value: '88%' }
   },
   {
     id: 'sub-100ms-web-architecture',
@@ -278,7 +285,11 @@ export const blogPostsData: BlogPost[] = [
     date: 'Aug 2026',
     category: 'Design Engineering',
     author: { name: 'Elena Rios', role: 'Design Principal' },
-    tags: ['UI/UX', 'Performance', 'Next.js', 'Typography']
+    tags: ['UI/UX', 'Performance', 'Next.js', 'Typography'],
+    featuredImage: postAppleDesignImg,
+    imageAlt: 'Minimalist luxury digital layout showing typography step ratios and sub-second web architecture',
+    caption: 'Apple-grade precision layout engineering: calculated corner curves and sub-100ms edge rendering.',
+    keyMetric: { label: 'Median Edge Latency', value: '< 64ms' }
   },
   {
     id: 'modernizing-latam-enterprise',
@@ -294,7 +305,11 @@ export const blogPostsData: BlogPost[] = [
     date: 'Jul 2026',
     category: 'Digital Transformation',
     author: { name: 'Mateo Castillo', role: 'Studio Director' },
-    tags: ['Panama', 'LATAM', 'Strategy', 'Growth']
+    tags: ['Panama', 'LATAM', 'Strategy', 'Growth'],
+    featuredImage: postPanamaBridgeImg,
+    imageAlt: 'Panama City skyline and maritime logistics canal hub connected via autonomous digital data streams',
+    caption: 'Connecting the Americas: Panama as the high-throughput logistics and financial intelligence crossroad.',
+    keyMetric: { label: 'Trade Lane Acceleration', value: '4.2x' }
   }
 ];
 

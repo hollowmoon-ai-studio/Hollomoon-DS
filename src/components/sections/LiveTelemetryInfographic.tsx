@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Radio, Cpu, ArrowUpRight, Zap, Globe, ShieldCheck, Gauge, Layers, RefreshCw } from 'lucide-react';
+import { Activity, Radio, Cpu, ArrowUpRight, Zap, Globe, ShieldCheck, Gauge, Layers, RefreshCw, Server, Wifi, CheckCircle2 } from 'lucide-react';
 import { Language } from '../../types';
 
 interface LiveTelemetryInfographicProps {
@@ -12,6 +12,34 @@ export const LiveTelemetryInfographic: React.FC<LiveTelemetryInfographicProps> =
   const [tps, setTps] = useState<number>(1420);
   const [latency, setLatency] = useState<number>(18.4);
   const [isLive, setIsLive] = useState<boolean>(true);
+
+  // Real client browser edge ping benchmark state
+  const [clientPing, setClientPing] = useState<number | null>(null);
+  const [isPinging, setIsPinging] = useState<boolean>(false);
+  const [lastPingTime, setLastPingTime] = useState<string | null>(null);
+
+  const runClientPingBenchmark = async () => {
+    setIsPinging(true);
+    try {
+      const t0 = performance.now();
+      const res = await fetch(`/api/health?bench=${Date.now()}`, { cache: 'no-store' });
+      const t1 = performance.now();
+      if (res.ok) {
+        const roundTrip = Math.max(1, Math.round(t1 - t0));
+        setClientPing(roundTrip);
+        setLastPingTime(new Date().toLocaleTimeString());
+      }
+    } catch (err) {
+      console.warn('Ping benchmark error:', err);
+    } finally {
+      setIsPinging(false);
+    }
+  };
+
+  // Run ping benchmark automatically on mount
+  useEffect(() => {
+    runClientPingBenchmark();
+  }, []);
 
   // Live ticking simulation for the telemetry sparkline
   useEffect(() => {
@@ -336,6 +364,51 @@ export const LiveTelemetryInfographic: React.FC<LiveTelemetryInfographicProps> =
                   ? 'Cada 100ms de latencia eliminada genera un aumento medido de +1.4% en tasa de conversión B2B.'
                   : 'Every 100ms of edge latency eliminated yields an average +1.4% conversion rate uplift in enterprise digital flagships.'}
               </p>
+            </div>
+
+            {/* Real Client Browser Live Edge Ping Benchmark Tool */}
+            <div className="p-5 rounded-3xl bg-card border border-border/80 shadow-macOS-subtle space-y-3 font-mono">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                  <Wifi className="w-4 h-4 text-[#4F7FFF]" />
+                  <span>{lang === 'es' ? 'Tu Latencia Real al Servidor' : 'Your Live Round-Trip Edge Ping'}</span>
+                </div>
+                <button
+                  onClick={runClientPingBenchmark}
+                  disabled={isPinging}
+                  className="px-2.5 py-1 rounded-lg bg-secondary text-[11px] text-foreground hover:bg-secondary/80 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  title="Measure live roundtrip HTTP/2 latency to server"
+                >
+                  <RefreshCw className={`w-3 h-3 text-[#4F7FFF] ${isPinging ? 'animate-spin' : ''}`} />
+                  <span>{isPinging ? (lang === 'es' ? 'Midiendo...' : 'Testing...') : (lang === 'es' ? 'Repetir Ping' : 'Test Again')}</span>
+                </button>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-secondary/40 border border-border/60 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase">
+                    {lang === 'es' ? 'Tiempo de Ida y Vuelta (RTT)' : 'Live Measured Round-Trip (RTT)'}
+                  </p>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-3xl font-display font-black text-foreground">
+                      {clientPing !== null ? clientPing : (isPinging ? '...' : '--')}
+                    </span>
+                    <span className="text-xs text-[#4F7FFF] font-bold">ms</span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <CheckCircle2 className="w-3 h-3" />
+                    {clientPing !== null && clientPing < 100 ? 'Tier 1 Edge Speed' : 'Fast Response'}
+                  </span>
+                  {lastPingTime && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {lang === 'es' ? `Comprobado: ${lastPingTime}` : `Verified at ${lastPingTime}`}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { CommandMenu } from './components/layout/CommandMenu';
@@ -111,49 +112,59 @@ export default function App() {
 
       {/* Main Content View Container */}
       <main className="flex-grow">
-        {currentRoute === 'home' && (
-          <HomePage onNavigate={handleNavigate} lang={lang} />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentRoute + (currentRoute === 'service-detail' ? `-${activeSlug}` : '') + (currentRoute === 'legal' ? `-${legalTab}` : '')}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {currentRoute === 'home' && (
+              <HomePage onNavigate={handleNavigate} lang={lang} />
+            )}
 
-        {currentRoute === 'services' && (
-          <ServicesPage onNavigate={handleNavigate} lang={lang} />
-        )}
+            {currentRoute === 'services' && (
+              <ServicesPage onNavigate={handleNavigate} lang={lang} />
+            )}
 
-        {currentRoute === 'service-detail' && (
-          <ServiceDetailPage
-            slug={activeSlug}
-            onNavigate={handleNavigate}
-            lang={lang}
-          />
-        )}
+            {currentRoute === 'service-detail' && (
+              <ServiceDetailPage
+                slug={activeSlug}
+                onNavigate={handleNavigate}
+                lang={lang}
+              />
+            )}
 
-        {currentRoute === 'os' && (
-          <HollowmoonOSPage onNavigate={handleNavigate} lang={lang} />
-        )}
+            {currentRoute === 'os' && (
+              <HollowmoonOSPage onNavigate={handleNavigate} lang={lang} />
+            )}
 
-        {currentRoute === 'case-studies' && (
-          <CaseStudiesPage onNavigate={handleNavigate} lang={lang} />
-        )}
+            {currentRoute === 'case-studies' && (
+              <CaseStudiesPage onNavigate={handleNavigate} lang={lang} />
+            )}
 
-        {currentRoute === 'blog' && (
-          <BlogPage onNavigate={handleNavigate} lang={lang} />
-        )}
+            {currentRoute === 'blog' && (
+              <BlogPage onNavigate={handleNavigate} lang={lang} />
+            )}
 
-        {currentRoute === 'about' && (
-          <AboutPage onNavigate={handleNavigate} lang={lang} />
-        )}
+            {currentRoute === 'about' && (
+              <AboutPage onNavigate={handleNavigate} lang={lang} />
+            )}
 
-        {currentRoute === 'contact' && (
-          <ContactPage onNavigate={handleNavigate} lang={lang} />
-        )}
+            {currentRoute === 'contact' && (
+              <ContactPage onNavigate={handleNavigate} lang={lang} />
+            )}
 
-        {currentRoute === 'legal' && (
-          <LegalPage
-            initialTab={legalTab}
-            onNavigate={handleNavigate}
-            lang={lang}
-          />
-        )}
+            {currentRoute === 'legal' && (
+              <LegalPage
+                initialTab={legalTab}
+                onNavigate={handleNavigate}
+                lang={lang}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Modern High-Contrast Footer */}

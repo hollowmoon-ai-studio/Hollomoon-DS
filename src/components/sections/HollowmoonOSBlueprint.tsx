@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Layers, Database, Cpu, Zap, Radio, Shield, CheckCircle, Activity, ArrowRight, Play, RefreshCw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { hollowmoonOSNodes, siteTranslations } from '../../data/sitemapData';
 import { Language } from '../../types';
+import {
+  fadeInUp,
+  staggerContainer,
+  defaultViewport,
+  appleEase
+} from '../../lib/animations';
 
 interface HollowmoonOSBlueprintProps {
   onNavigate: (route: string, slug?: string) => void;
@@ -12,7 +19,6 @@ interface HollowmoonOSBlueprintProps {
 
 export const HollowmoonOSBlueprint: React.FC<HollowmoonOSBlueprintProps> = ({ onNavigate, lang }) => {
   const [activeNodeId, setActiveNodeId] = useState<string>('reasoning');
-  const [isSimulating, setIsSimulating] = useState<boolean>(true);
   const [pulseCount, setPulseCount] = useState<number>(142);
   const t = siteTranslations[lang].osSection;
 
@@ -37,23 +43,47 @@ export const HollowmoonOSBlueprint: React.FC<HollowmoonOSBlueprintProps> = ({ on
     <section className="py-24 bg-background relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <span className="text-xs font-mono tracking-widest text-[#4F7FFF] uppercase font-semibold">
+        <motion.div
+          variants={staggerContainer(0.08, 0.05)}
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+          className="text-center max-w-3xl mx-auto mb-16 space-y-4"
+        >
+          <motion.span
+            variants={fadeInUp}
+            className="text-xs font-mono tracking-widest text-[#4F7FFF] uppercase font-semibold block"
+          >
             {t.eyebrow}
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-display font-bold text-foreground tracking-tight">
+          </motion.span>
+          <motion.h2
+            variants={fadeInUp}
+            className="text-3xl sm:text-5xl font-display font-bold text-foreground tracking-tight"
+          >
             {t.title}
-          </h2>
-          <p className="text-muted-foreground text-base leading-relaxed">
+          </motion.h2>
+          <motion.p
+            variants={fadeInUp}
+            className="text-muted-foreground text-base leading-relaxed"
+          >
             {t.description}
-          </p>
-          <p className="text-xs font-mono text-[#4F7FFF] pt-1">
+          </motion.p>
+          <motion.p
+            variants={fadeInUp}
+            className="text-xs font-mono text-[#4F7FFF] pt-1"
+          >
             {t.interactiveHint}
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Blueprint Visualizer Container */}
-        <div className="p-6 md:p-10 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl shadow-macOS-subtle space-y-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={defaultViewport}
+          transition={{ duration: 0.5, ease: appleEase }}
+          className="p-6 md:p-10 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl shadow-macOS-subtle space-y-8"
+        >
           {/* Top Status Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-border/60">
             <div className="flex items-center gap-3">
@@ -68,30 +98,43 @@ export const HollowmoonOSBlueprint: React.FC<HollowmoonOSBlueprintProps> = ({ on
             </div>
 
             <div className="flex items-center gap-3">
-              <button
+              <motion.button
+                whileTap={{ scale: 0.94 }}
                 onClick={handleSimulatePulse}
                 className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-secondary text-xs font-mono text-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-3 h-3 text-[#4F7FFF]" />
                 <span>Simulate Event ({pulseCount})</span>
-              </button>
+              </motion.button>
               <div className="px-3 py-1 rounded-lg bg-[#4F7FFF]/10 border border-[#4F7FFF]/20 text-[11px] font-mono text-[#4F7FFF]">
                 99.98% Healthy
               </div>
             </div>
           </div>
 
-          {/* Interactive Node Flowchart */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
+          {/* Interactive Node Flowchart with Staggered Entrance */}
+          <motion.div
+            variants={staggerContainer(0.08, 0.08)}
+            initial="hidden"
+            whileInView="visible"
+            viewport={defaultViewport}
+            className="grid grid-cols-1 md:grid-cols-5 gap-3 relative"
+          >
             {hollowmoonOSNodes.map((node, index) => {
               const isSelected = activeNodeId === node.id;
               return (
-                <div key={node.id} className="relative">
-                  <button
+                <motion.div
+                  key={node.id}
+                  variants={fadeInUp}
+                  className="relative"
+                >
+                  <motion.button
+                    whileHover={{ y: -3, transition: { duration: 0.2, ease: appleEase } }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => setActiveNodeId(node.id)}
-                    className={`w-full h-full p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-3 ${
+                    className={`w-full h-full p-4 rounded-2xl border text-left transition-colors duration-200 cursor-pointer flex flex-col justify-between space-y-3 ${
                       isSelected
-                        ? 'border-[#4F7FFF] bg-[#4F7FFF]/10 shadow-macOS-lift scale-[1.02]'
+                        ? 'border-[#4F7FFF] bg-[#4F7FFF]/10 shadow-macOS-lift'
                         : 'border-border/70 bg-background/50 hover:bg-secondary/40 hover:border-border'
                     }`}
                   >
@@ -120,7 +163,7 @@ export const HollowmoonOSBlueprint: React.FC<HollowmoonOSBlueprintProps> = ({ on
                         {node.status}
                       </span>
                     </div>
-                  </button>
+                  </motion.button>
 
                   {/* Flow arrow on desktop */}
                   {index < hollowmoonOSNodes.length - 1 && (
@@ -130,45 +173,54 @@ export const HollowmoonOSBlueprint: React.FC<HollowmoonOSBlueprintProps> = ({ on
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
 
-          {/* Active Node Detail Inspector */}
-          <div className="p-6 rounded-2xl bg-secondary/30 border border-border/60 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-            <div className="lg:col-span-2 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono uppercase text-[#4F7FFF] font-semibold">
-                  Active Node Telemetry
-                </span>
-                <span className="text-xs text-muted-foreground font-mono">
-                  [ID: {activeNode.id.toUpperCase()}]
-                </span>
+          {/* Active Node Detail Inspector with smooth node change transitions */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeNode.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: appleEase }}
+              className="p-6 rounded-2xl bg-secondary/30 border border-border/60 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center"
+            >
+              <div className="lg:col-span-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono uppercase text-[#4F7FFF] font-semibold">
+                    Active Node Telemetry
+                  </span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    [ID: {activeNode.id.toUpperCase()}]
+                  </span>
+                </div>
+                <h3 className="text-xl font-display font-bold text-foreground">
+                  {activeNode.label}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {activeNode.description}
+                </p>
               </div>
-              <h3 className="text-xl font-display font-bold text-foreground">
-                {activeNode.label}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {activeNode.description}
-              </p>
-            </div>
 
-            <div className="space-y-3 bg-card p-4 rounded-xl border border-border/60 font-mono text-xs">
-              <div className="flex justify-between text-muted-foreground pb-1.5 border-b border-border/40">
-                <span>Latency Benchmark:</span>
-                <span className="text-emerald-500 font-semibold">4.2ms avg</span>
+              <div className="space-y-3 bg-card p-4 rounded-xl border border-border/60 font-mono text-xs">
+                <div className="flex justify-between text-muted-foreground pb-1.5 border-b border-border/40">
+                  <span>Latency Benchmark:</span>
+                  <span className="text-emerald-500 font-semibold">4.2ms avg</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground pb-1.5 border-b border-border/40">
+                  <span>Throughput:</span>
+                  <span className="text-foreground">{activeNode.metrics}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Fault Tolerance:</span>
+                  <span className="text-[#4F7FFF]">Self-Healing Active</span>
+                </div>
               </div>
-              <div className="flex justify-between text-muted-foreground pb-1.5 border-b border-border/40">
-                <span>Throughput:</span>
-                <span className="text-foreground">{activeNode.metrics}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Fault Tolerance:</span>
-                <span className="text-[#4F7FFF]">Self-Healing Active</span>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </AnimatePresence>
 
           {/* CTA Footer */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/40">
@@ -182,7 +234,7 @@ export const HollowmoonOSBlueprint: React.FC<HollowmoonOSBlueprintProps> = ({ on
               Request Custom System Architecture
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
