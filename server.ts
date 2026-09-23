@@ -1,15 +1,42 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
-import { createServer as createViteServer } from 'vite';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/**
+ * Robust Path Management Strategy:
+ * Locates the production client distribution directory across any execution environment
+ * (Node ESM, Docker/Cloud Run container roots, or varied working directories).
+ */
+function resolveStaticDirectory(): string {
+  const scriptDir =
+    typeof import.meta !== 'undefined' && (import.meta as any).dirname
+      ? (import.meta as any).dirname
+      : (typeof __dirname !== 'undefined' ? __dirname : process.cwd());
+
+  const cwd = process.cwd();
+
+  const candidates = [
+    path.resolve(scriptDir, 'dist'),
+    path.resolve(cwd, 'dist'),
+    path.resolve(cwd, 'applet', 'dist'),
+    path.resolve('/app/applet/dist'),
+    scriptDir,
+    cwd,
+  ];
+
+  for (const dir of candidates) {
+    if (dir && fs.existsSync(path.join(dir, 'index.html'))) {
+      return dir;
+    }
+  }
+
+  return path.resolve(scriptDir, 'dist');
+}
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
 
@@ -31,14 +58,18 @@ async function startServer() {
     return aiClient;
   }
 
-  // Health check endpoint
-  app.get('/api/health', (req, res) => {
-    res.json({
+  // Health check endpoints (supports Cloud Run & custom health probes)
+  const healthResponse = (req: express.Request, res: express.Response) => {
+    res.status(200).json({
       status: 'ok',
       service: 'Hollowmoon Digital Studio API',
       hasGeminiKey: !!process.env.GEMINI_API_KEY,
     });
-  });
+  };
+
+  app.get('/api/health', healthResponse);
+  app.get('/health', healthResponse);
+  app.get('/healthz', healthResponse);
 
   // AURA AI Concierge Server Endpoint with Persistent Memory Recall
   app.post('/api/concierge', async (req, res) => {
@@ -152,24 +183,70 @@ ${
     }
   });
 
-  // Vite Middleware for development vs Static dist for production
-  if (process.env.NODE_ENV !== 'production') {
+  // Catch non-existent API routes with 404 JSON
+  app.all('/api/*', (req, res) => {
+    res.status(404).json({ error: 'API route not found' });
+  });
+
+  // Development vs Production Serving
+  const distPath = resolveStaticDirectory();
+  const hasBuiltApp = fs.existsSync(path.join(distPath, 'index.html'));
+
+  // Production mode: when static assets exist and we are not explicitly in the dev lifecycle
+  const isDev = process.env.npm_lifecycle_event === 'dev' || (!hasBuiltApp && process.env.NODE_ENV !== 'production');
+  const isProduction = !isDev;
+
+  if (!isProduction) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    console.log(`[Production] Serving static files from: ${distPath}`);
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      const indexPath = path.join(distPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send('Application client bundle not found. Please run npm run build.');
+      }
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Hollowmoon Digital Studio Server running on http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Hollowmoon Digital Studio Server listening on http://0.0.0.0:${PORT} [mode: ${isProduction ? 'production' : 'development'}]`);
+  });
+
+  server.on('error', (err: any) => {
+    console.error('Fatal Server Listen Error:', err);
+  });
+
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+      console.log('HTTP server closed');
+      process.exit(0);
+    });
+  });
+
+  process.on('SIGINT', () => {
+    console.log('SIGINT signal received: closing HTTP server');
+    server.close(() => {
+      console.log('HTTP server closed');
+      process.exit(0);
+    });
   });
 }
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
 
 startServer();

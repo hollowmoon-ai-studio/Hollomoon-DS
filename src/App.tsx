@@ -1,19 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
-import { CommandMenu } from './components/layout/CommandMenu';
 import { HomePage } from './components/pages/HomePage';
-import { ServicesPage } from './components/pages/ServicesPage';
-import { ServiceDetailPage } from './components/pages/ServiceDetailPage';
-import { HollowmoonOSPage } from './components/pages/HollowmoonOSPage';
-import { CaseStudiesPage } from './components/pages/CaseStudiesPage';
-import { BlogPage } from './components/pages/BlogPage';
-import { AboutPage } from './components/pages/AboutPage';
-import { ContactPage } from './components/pages/ContactPage';
-import { LegalPage } from './components/pages/LegalPage';
-import { AuraConcierge } from './components/concierge/AuraConcierge';
+import { DynamicSEO } from './components/layout/DynamicSEO';
+import { ScrollProgressBar } from './components/layout/ScrollProgressBar';
+import { PageLoadingFallback } from './components/layout/PageLoadingFallback';
 import { Language } from './types';
+
+// Code-split and lazy-load secondary pages and heavy overlays
+const ServicesPage = lazy(() => import('./components/pages/ServicesPage').then((m) => ({ default: m.ServicesPage })));
+const ServiceDetailPage = lazy(() => import('./components/pages/ServiceDetailPage').then((m) => ({ default: m.ServiceDetailPage })));
+const HollowmoonOSPage = lazy(() => import('./components/pages/HollowmoonOSPage').then((m) => ({ default: m.HollowmoonOSPage })));
+const CaseStudiesPage = lazy(() => import('./components/pages/CaseStudiesPage').then((m) => ({ default: m.CaseStudiesPage })));
+const BlogPage = lazy(() => import('./components/pages/BlogPage').then((m) => ({ default: m.BlogPage })));
+const AboutPage = lazy(() => import('./components/pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => import('./components/pages/ContactPage').then((m) => ({ default: m.ContactPage })));
+const LegalPage = lazy(() => import('./components/pages/LegalPage').then((m) => ({ default: m.LegalPage })));
+
+// Overlays lazy-loaded on demand
+const CommandMenu = lazy(() => import('./components/layout/CommandMenu').then((m) => ({ default: m.CommandMenu })));
+const AuraConcierge = lazy(() => import('./components/concierge/AuraConcierge').then((m) => ({ default: m.AuraConcierge })));
 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>('home');
@@ -39,9 +46,12 @@ export default function App() {
       setLang(savedLang);
     }
 
-    // Check URL hash or path for initial route
-    const hash = window.location.hash.replace('#', '').trim();
-    if (hash) {
+    const syncRouteFromHash = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      if (!hash) {
+        setCurrentRoute('home');
+        return;
+      }
       if (hash.startsWith('service-')) {
         const slug = hash.replace('service-', '');
         setCurrentRoute('service-detail');
@@ -54,7 +64,11 @@ export default function App() {
           setCurrentRoute(hash);
         }
       }
-    }
+    };
+
+    syncRouteFromHash();
+    window.addEventListener('hashchange', syncRouteFromHash);
+    return () => window.removeEventListener('hashchange', syncRouteFromHash);
   }, []);
 
   const handleToggleTheme = () => {
@@ -99,6 +113,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-[#4F7FFF]/30 selection:text-white transition-colors duration-300">
+      {/* Dynamic SEO, Meta Tags & Schema.org JSON-LD */}
+      <DynamicSEO
+        currentRoute={currentRoute}
+        activeSlug={activeSlug}
+        lang={lang}
+        legalTab={legalTab}
+      />
+
+      {/* Reading Scroll Progress Bar for Long-Form Content */}
+      <ScrollProgressBar
+        currentRoute={currentRoute}
+        lang={lang}
+      />
+
       {/* Sticky Glassmorphism Header */}
       <Header
         currentRoute={currentRoute}
@@ -112,78 +140,86 @@ export default function App() {
 
       {/* Main Content View Container */}
       <main className="flex-grow">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentRoute + (currentRoute === 'service-detail' ? `-${activeSlug}` : '') + (currentRoute === 'legal' ? `-${legalTab}` : '')}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {currentRoute === 'home' && (
-              <HomePage onNavigate={handleNavigate} lang={lang} />
-            )}
+        <Suspense fallback={<PageLoadingFallback />}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentRoute + (currentRoute === 'service-detail' ? `-${activeSlug}` : '') + (currentRoute === 'legal' ? `-${legalTab}` : '')}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {currentRoute === 'home' && (
+                <HomePage onNavigate={handleNavigate} lang={lang} />
+              )}
 
-            {currentRoute === 'services' && (
-              <ServicesPage onNavigate={handleNavigate} lang={lang} />
-            )}
+              {currentRoute === 'services' && (
+                <ServicesPage onNavigate={handleNavigate} lang={lang} />
+              )}
 
-            {currentRoute === 'service-detail' && (
-              <ServiceDetailPage
-                slug={activeSlug}
-                onNavigate={handleNavigate}
-                lang={lang}
-              />
-            )}
+              {currentRoute === 'service-detail' && (
+                <ServiceDetailPage
+                  slug={activeSlug}
+                  onNavigate={handleNavigate}
+                  lang={lang}
+                />
+              )}
 
-            {currentRoute === 'os' && (
-              <HollowmoonOSPage onNavigate={handleNavigate} lang={lang} />
-            )}
+              {currentRoute === 'os' && (
+                <HollowmoonOSPage onNavigate={handleNavigate} lang={lang} />
+              )}
 
-            {currentRoute === 'case-studies' && (
-              <CaseStudiesPage onNavigate={handleNavigate} lang={lang} />
-            )}
+              {currentRoute === 'case-studies' && (
+                <CaseStudiesPage onNavigate={handleNavigate} lang={lang} />
+              )}
 
-            {currentRoute === 'blog' && (
-              <BlogPage onNavigate={handleNavigate} lang={lang} />
-            )}
+              {currentRoute === 'blog' && (
+                <BlogPage onNavigate={handleNavigate} lang={lang} />
+              )}
 
-            {currentRoute === 'about' && (
-              <AboutPage onNavigate={handleNavigate} lang={lang} />
-            )}
+              {currentRoute === 'about' && (
+                <AboutPage onNavigate={handleNavigate} lang={lang} />
+              )}
 
-            {currentRoute === 'contact' && (
-              <ContactPage onNavigate={handleNavigate} lang={lang} />
-            )}
+              {currentRoute === 'contact' && (
+                <ContactPage onNavigate={handleNavigate} lang={lang} />
+              )}
 
-            {currentRoute === 'legal' && (
-              <LegalPage
-                initialTab={legalTab}
-                onNavigate={handleNavigate}
-                lang={lang}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+              {currentRoute === 'legal' && (
+                <LegalPage
+                  initialTab={legalTab}
+                  onNavigate={handleNavigate}
+                  lang={lang}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </Suspense>
       </main>
 
       {/* Modern High-Contrast Footer */}
       <Footer onNavigate={handleNavigate} lang={lang} />
 
-      {/* Global Cmd+K Search Command Palette */}
-      <CommandMenu
-        isOpen={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        onNavigate={handleNavigate}
-        lang={lang}
-      />
+      {/* Global Cmd+K Search Command Palette (Loaded on demand) */}
+      <Suspense fallback={null}>
+        {searchOpen && (
+          <CommandMenu
+            isOpen={searchOpen}
+            onClose={() => setSearchOpen(false)}
+            onNavigate={handleNavigate}
+            lang={lang}
+          />
+        )}
+      </Suspense>
 
       {/* Multimodal Voice-Enabled Virtual Business Development AI Concierge (AURA) */}
-      <AuraConcierge
-        onNavigate={handleNavigate}
-        lang={lang}
-        onToggleLang={handleToggleLang}
-      />
+      <Suspense fallback={null}>
+        <AuraConcierge
+          onNavigate={handleNavigate}
+          lang={lang}
+          onToggleLang={handleToggleLang}
+        />
+      </Suspense>
     </div>
   );
 }
